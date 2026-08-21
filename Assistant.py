@@ -253,15 +253,9 @@ def process_command(user_input):
 
     ## View Tasks using Model ##
     elif action == "view_tasks":
-        status = data.get("status", "all")
+        filters = data.get("filters", {})
+        status = filters.get("status", "all")
         database.view_tasks(status)
-
-        if status == "all":
-            database.view_tasks()
-        else:
-            database.view_tasks(status)
-    else:
-
         print("Unknown action:", action)
 
 ## MAIN To Continue Conversation ##
