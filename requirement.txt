@@ -1,1 +1,9 @@
 win11toast
+requests
+python-dateutil
+winsdk
+playsound
+python-dotenv
+Ollama
+#pystray
+#Pillow
