@@ -138,32 +138,33 @@ def view_tasks(status=None):
 
     tasks = cursor.fetchall()
 
-    if not tasks:
-        print("\nNo tasks found.")
-        conn.close()
-        return
-
-    print("\n" + "=" * 60)
-
-    if status is None:
-        print("ALL TASKS")
-    else:
-        print(f"{status.upper()} TASKS")
-
-    print("=" * 60)
-
-    for task in tasks:
-        print(f"ID          : {task[0]}")
-        print(f"Title       : {task[1]}")
-        print(f"Description : {task[2]}")
-        print(f"Due Date    : {task[3]}")
-        print(f"Due Time    : {task[4]}")
-        print(f"Priority    : {task[5]}")
-        print(f"Status      : {task[6]}")
-        print(f"Created At  : {task[7]}")
-        print("-" * 60)
+#    if not tasks:
+#        print("\nNo tasks found.")
+#        conn.close()
+#        return
+#
+#    print("\n" + "=" * 60)
+#
+#   if status is None:
+#        print("ALL TASKS")
+#    else:
+#        print(f"{status.upper()} TASKS")
+#
+#    print("=" * 60)
+#
+#    for task in tasks:
+#        print(f"ID          : {task[0]}")
+#        print(f"Title       : {task[1]}")
+#        print(f"Description : {task[2]}")
+#        print(f"Due Date    : {task[3]}")
+#        print(f"Due Time    : {task[4]}")
+#        print(f"Priority    : {task[5]}")
+#        print(f"Status      : {task[6]}")
+#        print(f"Created At  : {task[7]}")
+#        print("-" * 60)
 
     conn.close()
+    return tasks
 
 ## Delete Task Function ##
 def delete_task(task_id= None):    
@@ -270,26 +271,27 @@ def search_tasks(keyword=None):
 
     tasks = cursor.fetchall()
 
-    if not tasks:
-        print("\nNo matching tasks found.")
-        conn.close()
-        return
-
-    print("\nMatching Tasks")
-    print("=" * 60)
-
-    for task in tasks:
-        print(f"ID          : {task[0]}")
-        print(f"Title       : {task[1]}")
-        print(f"Description : {task[2]}")
-        print(f"Due Date    : {task[3]}")
-        print(f"Due Time    : {task[4]}")
-        print(f"Priority    : {task[5]}")
-        print(f"Status      : {task[6]}")
-        print(f"Created At  : {task[7]}")
-        print("-" * 60)
-
+#    if not tasks:
+ #       print("\nNo matching tasks found.")
+#        conn.close()
+#        return
+#
+#    print("\nMatching Tasks")
+ #   print("=" * 60)
+#
+ #   for task in tasks:
+ #       print(f"ID          : {task[0]}")
+#        print(f"Title       : {task[1]}")
+#        print(f"Description : {task[2]}")
+#        print(f"Due Date    : {task[3]}")
+#        print(f"Due Time    : {task[4]}")
+#        print(f"Priority    : {task[5]}")
+#        print(f"Status      : {task[6]}")
+#        print(f"Created At  : {task[7]}")
+#        print("-" * 60)
+#
     conn.close()
+    return tasks
 
 ## GET NEXT DUE DATE function ##
 def get_next_due_date(due_date, recurrence):
@@ -524,3 +526,16 @@ def export_tasks_to_csv():
         writer.writerows(tasks)
         print(f"Tasks exported successfully:{filename}")
         return filename
+
+### MARK AS PENDING ##
+def mark_as_pending(task_id):
+    conn = sqlite3.connect("Assistant.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE tasks SET status = 'pending', completed_at = NULL WHERE id = ?",
+        (task_id,)
+    )
+
+    conn.commit()
+    conn.close()

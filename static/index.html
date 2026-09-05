@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Task Manager</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="profile">
+        <div class="avatar" id="user-avatar">U</div>
+        <span class="profile-name" id="user-name">You</span>
+      </div>
+
+      <button class="add-task-btn" id="open-add-task">
+        <span class="plus-icon">+</span> Add task
+      </button>
+
+      <nav class="nav-group">
+        <button class="nav-item" data-filter="all">
+          <span class="nav-icon">▤</span> All Tasks
+        </button>
+        <button class="nav-item active" data-filter="pending">
+          <span class="nav-icon">◐</span> Pending
+        </button>
+        <button class="nav-item" data-filter="completed">
+          <span class="nav-icon">✓</span> Completed
+        </button>
+        <button class="nav-item" data-filter="expired">
+          <span class="nav-icon">!</span> Expired
+        </button>
+      </nav>
+
+      <div class="nav-label">Priority</div>
+      <nav class="nav-group">
+        <button class="nav-item tag" data-priority="high"><span class="tag-dot high"></span> High</button>
+        <button class="nav-item tag" data-priority="medium"><span class="tag-dot medium"></span> Medium</button>
+        <button class="nav-item tag" data-priority="low"><span class="tag-dot low"></span> Low</button>
+      </nav>
+    </aside>
+
+    <!-- FLOATING AI CHAT CARD -->
+    <section class="card chat-card">
+      <div class="card-header">
+        <h2>AI Assistant</h2>
+        <button class="icon-btn" aria-label="More options">⋯</button>
+      </div>
+      <div class="chat-log" id="chat-log">
+        <div class="chat-msg ai">
+          <span class="ai-dot"></span>
+          <p>Hi! Ask me to add, find, or organize your tasks in plain language.</p>
+        </div>
+      </div>
+      <form class="chat-input-row" id="chat-form">
+        <input type="text" id="chat-input" placeholder="Ask AI Assistant…" autocomplete="off">
+        <button type="submit" class="send-btn" aria-label="Send">➤</button>
+      </form>
+    </section>
+
+    <!-- GOALS / COMPLETION RING -->
+    <section class="card goals-card">
+      <div class="card-header">
+        <h2>Progress</h2>
+        <button class="icon-btn" aria-label="More options">⋯</button>
+      </div>
+      <div class="ring-wrap">
+        <svg viewBox="0 0 120 120" class="ring">
+          <circle cx="60" cy="60" r="52" class="ring-bg"></circle>
+          <circle cx="60" cy="60" r="52" class="ring-progress" id="ring-progress"></circle>
+        </svg>
+        <div class="ring-label" id="ring-percent">0%</div>
+      </div>
+      <p class="ring-caption" id="ring-caption">0 of 0 tasks done</p>
+    </section>
+
+    <!-- UPCOMING -->
+    <section class="card upcoming-card">
+      <div class="card-header">
+        <h2>Upcoming</h2>
+        <button class="icon-btn" aria-label="More options">⋯</button>
+      </div>
+      <div id="upcoming-list" class="upcoming-list">
+        <p class="empty-hint">Nothing scheduled soon.</p>
+      </div>
+    </section>
+
+    <!-- MAIN TASK LIST -->
+    <section class="focus-card">
+      <div class="focus-header">
+        <h1 id="focus-title">Your Focus</h1>
+        <span class="task-count" id="task-count">0 tasks</span>
+      </div>
+      <div id="task-list" class="task-list">
+        <!-- tasks injected by app.js -->
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ADD / EDIT TASK MODAL -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal">
+      <h2 id="modal-title">Add task</h2>
+      <form id="task-form">
+        <input type="hidden" id="task-id">
+        <label>Title
+          <input type="text" id="field-title" required>
+        </label>
+        <label>Description
+          <textarea id="field-description" rows="2"></textarea>
+        </label>
+        <div class="modal-row">
+          <label>Date
+            <input type="date" id="field-date">
+          </label>
+          <label>Time
+            <input type="time" id="field-time">
+          </label>
+        </div>
+        <label>Priority
+          <select id="field-priority">
+            <option value="high">High</option>
+            <option value="medium" selected>Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" id="cancel-modal">Cancel</button>
+          <button type="submit" class="btn-primary">Save task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

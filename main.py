@@ -5,6 +5,13 @@ import scheduler
 import database
 from database import get_task_statistics, export_tasks_to_csv
 
+def print_tasks(tasks):
+    if not tasks:
+        print("No tasks found.")
+        return
+    for task in tasks:
+        print(f"ID: {task[0]}, Title: {task[1]}, Description: {task[2]}, Due Date: {task[3]}, Status: {task[4]}, Recurring: {task[5]}, Pre-reminder: {task[6]}")
+
 database.create_database()
 
 scheduler_thread = threading.Thread(
@@ -35,22 +42,22 @@ while True:
         database.add_task()
 
     elif choice == "2":
-        database.view_tasks("pending")
+        print_tasks(database.view_tasks("pending"))
 
     elif choice == "3":
-        database.view_tasks("completed")
+        print_tasks(database.view_tasks("completed"))
 
     elif choice == "4":
-        database.view_tasks("expired")
+        print_tasks(database.view_tasks("expired"))
 
     elif choice == "5":
-        database.view_tasks()
+        print_tasks(database.view_tasks())
 
     elif choice == "6":
         database.update_task()
 
     elif choice == "7":
-        database.search_tasks()
+        print_tasks(database.search_tasks())
 
     elif choice == "8":
         database.delete_task()
