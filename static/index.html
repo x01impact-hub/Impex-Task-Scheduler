@@ -25,6 +25,11 @@
         Add task
       </button>
 
+    <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Search tasks…">
+        <button class="icon-btn" id="searchBtn">🔍</button>
+      </div>
+
       <div class="nav-group">
         <div class="nav-item active" data-filter="all"><span class="nav-label">All tasks</span></div>
         <div class="nav-item" data-filter="pending"><span class="nav-label">Pending</span></div>
@@ -72,7 +77,6 @@
     </div>
 
     <!-- Right -->
-    <div class="right">
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">Progress</div>
@@ -84,6 +88,7 @@
           </div>
           <div class="ring-caption" id="progressCaption">0 of 0 tasks done</div>
         </div>
+        <button class="icon-btn stats-link" id="viewStatsBtn">View full stats →</button>
       </div>
 
       <div class="panel">
@@ -98,7 +103,7 @@
     </div>
   </div>
 
-  <!-- Add / Edit task modal -->
+<!-- Add / Edit task modal -->
   <div class="modal-backdrop" id="modalBackdrop">
     <div class="modal panel">
       <div class="modal-title" id="modalTitle">Add task</div>
@@ -130,6 +135,19 @@
           <button type="submit" class="add-task-btn">Save task</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Full statistics modal -->
+  <div class="modal-backdrop" id="statsBackdrop">
+    <div class="modal panel modal-wide">
+      <div class="modal-title">Task Statistics</div>
+      <div class="stats-grid" id="statsGrid">
+        <!-- filled by script.js -->
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="icon-btn" id="closeStats">Close</button>
+      </div>
     </div>
   </div>
 

@@ -1,6 +1,8 @@
 let allTasks = [];
 let currentFilter = "all";
 let editingTaskId = null;
+let isSearching = false;
+let searchQuery = "";
 
 const taskListEl = document.getElementById("taskList");
 const taskCountEl = document.getElementById("taskCount");
@@ -31,13 +33,19 @@ document.addEventListener("DOMContentLoaded", () => {
     setupNav();
     setupModal();
     setupAssistant();
+    setupSearch();
+    setupStats();
   });
 });
 
 // ---------- Loading & rendering tasks ----------
 async function loadTasks() {
   try {
-    allTasks = await window.pywebview.api.get_tasks(currentFilter);
+    if(isSearching){
+      allTasks = await window.pywebview.api.search_tasks(searchQuery);  
+    } else {
+      allTasks = await window.pywebview.api.get_tasks(currentFilter);
+    }
   } catch (e) {
     console.error("Failed to load tasks", e);
     allTasks = [];
@@ -49,7 +57,7 @@ async function loadTasks() {
 
 function renderTaskList() {
   taskListEl.innerHTML = "";
-  focusTitleEl.textContent = FILTER_TITLES[currentFilter] || "Tasks";
+  focusTitleEl.textContent = isSearching ? `Search: "${searchQuery}"` : (FILTER_TITLES[currentFilter] || "Tasks");
   taskCountEl.textContent = `${allTasks.length} task${allTasks.length === 1 ? "" : "s"}`;
 
   if (allTasks.length === 0) {
@@ -150,8 +158,35 @@ function setupNav() {
       document.querySelectorAll(".nav-item[data-filter]").forEach((el) => el.classList.remove("active"));
       item.classList.add("active");
       currentFilter = item.dataset.filter;
+      isSearching = false;
+      searchQuery= "";
+      document.getElementById("searchInput").value = "";
       loadTasks();
     });
+  });
+}
+
+function setupSearch() {
+  const searchInput = document.getElementById("searchInput");
+  const searchBtn = document.getElementById("searchBtn");
+
+  function runSearch() {
+    const text = searchInput.value.trim();
+    if (!text) {
+      isSearching = false;
+      searchQuery = "";
+      loadTasks();
+      return;
+    }
+    isSearching = true;
+    searchQuery = text;
+    document.querySelectorAll(".nav-item[data-filter]").forEach((el) => el.classList.remove("active"));
+    loadTasks();
+  }
+
+  searchBtn.addEventListener("click", runSearch);
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") runSearch();
   });
 }
 
@@ -265,4 +300,52 @@ function setupAssistant() {
       console.error(err);
     }
   }
+}
+
+function setupStats() {
+  const backdrop = document.getElementById("statsBackdrop");
+  const grid = document.getElementById("statsGrid");
+
+  document.getElementById("viewStatsBtn").addEventListener("click", async () => {
+    try {
+      const s = await window.pywebview.api.get_stats();
+
+      const items = [
+        ["Total tasks", s.total],
+        ["Completion rate", `${s.completion_rate}%`],
+        ["Pending", s.pending],
+        ["Completed", s.completed],
+        ["Expired", s.expired],
+        ["Recurring", s.recurring],
+        ["Due today", s.today],
+        ["Due tomorrow", s.tomorrow],
+        ["Completed today", s.completed_today],
+        ["Completed this week", s.completed_week],
+        ["Completed this month", s.completed_month],
+        ["High priority", s.high],
+        ["Medium priority", s.medium],
+        ["Low priority", s.low],
+        ["With reminders", s.pre_reminder],
+      ];
+
+      grid.innerHTML = items.map(([label, value]) => `
+        <div class="stat-item">
+          <div class="stat-value">${value}</div>
+          <div class="stat-label">${label}</div>
+        </div>
+      `).join("");
+
+      backdrop.classList.add("open");
+    } catch (e) {
+      console.error("Failed to load statistics", e);
+    }
+  });
+
+  document.getElementById("closeStats").addEventListener("click", () => {
+    backdrop.classList.remove("open");
+  });
+
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) backdrop.classList.remove("open");
+  });
 }

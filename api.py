@@ -22,7 +22,11 @@ class Api:
 
     def get_stats(self):
         return database.get_task_statistics()
-
+    
+    def search_tasks(self, query):
+        rows = database.search_tasks(query) or []
+        return [self._row_to_dict(row) for row in rows]
+    
     # ---------- Mutating tasks ----------
     def add_task(self, payload):
         return database.add_task(

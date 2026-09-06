@@ -462,7 +462,7 @@ def get_task_statistics():
         statistics["completion_rate"] = round((statistics["completed"] / statistics["total"]) * 100, 2)
     else:
         statistics["completion_rate"] = 0.0
-    conn.close()
+    
 
     ## todays tasks ##
     cursor.execute("SELECT COUNT(*) FROM tasks WHERE due_date = ?", (datetime.now().strftime("%Y-%m-%d"),))
@@ -503,6 +503,7 @@ def get_task_statistics():
     """)
     statistics["completed_month"] = cursor.fetchone()[0]
 
+    conn.close()
     return statistics
 
 ## EXPORTING tasks for CSV ##
