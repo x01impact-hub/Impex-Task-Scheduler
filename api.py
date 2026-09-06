@@ -35,8 +35,8 @@ class Api:
             due_date=payload.get("due_date") or _today_str(),
             due_time=payload.get("due_time") or "09:00",
             priority=payload.get("priority") or "medium",
-            recurrence="none",
-            remind_before=0,
+            recurrence=payload.get("recurrence") or "none",
+            remind_before=int(payload.get("remind_before") or 0),
         )
 
     def update_task(self, task_id, payload):
@@ -47,6 +47,9 @@ class Api:
             due_date=payload.get("due_date") or "",
             due_time=payload.get("due_time") or "",
             priority=payload.get("priority") or "",
+            recurrence=payload.get("recurrence") or "",
+            remind_before=int(payload.get("remind_before", 0)),
+
         )
         return True
 
@@ -83,6 +86,8 @@ class Api:
             "due_time": row[4],
             "priority": (row[5] or "medium").lower(),
             "status": row[6],
+            "recurrence": row[7] or "none",
+            "remind_before": row[8] or 0,
         }
 
 

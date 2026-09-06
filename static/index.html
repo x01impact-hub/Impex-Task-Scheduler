@@ -130,6 +130,19 @@
             <option value="low">Low</option>
           </select>
         </label>
+        <label>Recurrence
+          <select id="fieldRecurrence">
+            <option value="none" selected>None</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="fieldReminder">
+          15-minute reminder before due time
+        </label>
+
         <div class="modal-actions">
           <button type="button" class="icon-btn" id="cancelModal">Cancel</button>
           <button type="submit" class="add-task-btn">Save task</button>

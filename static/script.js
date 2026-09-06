@@ -100,6 +100,10 @@ function formatMeta(task) {
   const parts = [];
   if (task.due_date) parts.push(task.due_date);
   if (task.due_time) parts.push(task.due_time);
+  if (task.recurrence && task.recurrence !== "none") {
+    const label = task.recurrence.charAt(0).toUpperCase() + task.recurrence.slice(1);
+    parts.push(`🔁 ${label}`);
+  }
   return parts.length ? parts.join(" · ") : "No due date";
 }
 
@@ -241,6 +245,8 @@ function setupModal() {
       due_date: document.getElementById("fieldDate").value || null,
       due_time: document.getElementById("fieldTime").value || null,
       priority: document.getElementById("fieldPriority").value,
+      recurrence: document.getElementById("fieldRecurrence").value,
+      remind_before: document.getElementById("fieldReminder").checked ? 15 : 0,
     };
 
     try {
@@ -269,7 +275,8 @@ function openEditModal(taskId) {
   document.getElementById("fieldDate").value = task.due_date || "";
   document.getElementById("fieldTime").value = task.due_time || "";
   document.getElementById("fieldPriority").value = task.priority || "medium";
-
+  document.getElementById("fieldRecurrence").value = task.recurrence || "none";
+  document.getElementById("fieldReminder").checked = (task.remind_before || 0) > 0;
   document.getElementById("modalBackdrop").classList.add("open");
 }
 

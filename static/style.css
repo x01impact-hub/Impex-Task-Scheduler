@@ -459,3 +459,16 @@ body::before{
   color: var(--mist-45);
   margin-top: 2px;
 }
+
+.modal label.checkbox-label{
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  color: var(--mist-100);
+  font-size: 13px;
+}
+.modal label.checkbox-label input[type="checkbox"]{
+  width: 16px;
+  height: 16px;
+  accent-color: var(--sage);
+}

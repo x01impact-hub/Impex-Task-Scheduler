@@ -188,7 +188,7 @@ def delete_task(task_id= None):
     conn.close()
 
 ## Update Task Function ##
-def update_task(task_id=None,title=None,description=None,due_date=None,due_time=None,priority=None):
+def update_task(task_id=None,title=None,description=None,due_date=None,due_time=None,priority=None,recurrence=None,remind_before=None):
     conn = sqlite3.connect("Assistant.db")
     cursor = conn.cursor()
 
@@ -206,6 +206,16 @@ def update_task(task_id=None,title=None,description=None,due_date=None,due_time=
         due_time = input("Enter new due time (leave blank to keep current): ").strip()
     if priority is None:
         priority = input("New priority (High/Medium/Low) (leave blank to keep current): ").strip()
+    if recurrence is None:
+        recurrence = input("New recurrence (none/daily/weekly/monthly) (leave blank to keep current): ").strip()
+    if remind_before is None:
+        answer = input("Change 15-minute reminder? (yes/no/blank to keep current): ").strip().lower()
+        if answer == "yes":
+            remind_before = 15
+        elif answer == "no":
+            remind_before = 0
+        else:
+            remind_before = None
     if due_time:
         try:
             due_time = datetime.strptime(due_time, "%H:%M").strftime("%H:%M")
@@ -236,6 +246,14 @@ def update_task(task_id=None,title=None,description=None,due_date=None,due_time=
     if priority:
         updates.append("priority = ?")
         values.append(priority)
+
+    if recurrence:
+        updates.append("recurrence = ?")
+        values.append(recurrence)
+
+    if remind_before is not None:
+        updates.append("remind_before = ?")
+        values.append(remind_before)
 
     if not updates:
         print("No changes made.")
