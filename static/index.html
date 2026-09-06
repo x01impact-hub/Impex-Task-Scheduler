@@ -50,7 +50,10 @@
       <div class="panel">
         <div class="assistant-head">
           <div class="assistant-title">AI Assistant</div>
-          <span class="more">···</span>
+          <div class="assistant-head-actions">
+            <button class="icon-btn" id="expandAssistantBtn" title="Expand">⤢</button>
+            <span class="more">···</span>
+          </div>
         </div>
         <div class="assistant-msg">
           <div class="ai-dot"></div>
@@ -163,7 +166,30 @@
       </div>
     </div>
   </div>
+  <!-- Expanded Assistant Panel -->
+  <div class="assistant-panel-backdrop" id="assistantPanelBackdrop">
+    <div class="assistant-panel">
+      <div class="assistant-panel-header">
+        <div class="assistant-title">AI Assistant</div>
+        <button class="icon-btn" id="collapseAssistantBtn" title="Close">✕</button>
+      </div>
 
+      <div class="assistant-panel-actions">
+        <button type="button" class="pill-btn" id="summaryBtn">📋 Task Summary</button>
+        <button type="button" class="pill-btn" id="suggestBtn">✨ Suggest Tasks</button>
+      </div>
+
+      <div class="chat-log-expanded" id="chatLogExpanded"></div>
+
+      <form class="ask-row" id="assistantPanelForm">
+        <input type="text" id="assistantPanelInput" placeholder="Ask AI Assistant…">
+        <button type="submit" class="send-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0E1610" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+  
   <script src="script.js"></script>
 </body>
 </html>

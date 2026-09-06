@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupAssistant();
     setupSearch();
     setupStats();
+    setupAssistantPanel();
   });
 });
 
@@ -355,4 +356,79 @@ function setupStats() {
   backdrop.addEventListener("click", (e) => {
     if (e.target === backdrop) backdrop.classList.remove("open");
   });
+}
+
+function setupAssistantPanel() {
+  const backdrop = document.getElementById("assistantPanelBackdrop");
+  const chatLog = document.getElementById("chatLogExpanded");
+  const form = document.getElementById("assistantPanelForm");
+  const input = document.getElementById("assistantPanelInput");
+
+  document.getElementById("expandAssistantBtn").addEventListener("click", () => {
+    backdrop.classList.add("open");
+    if (chatLog.children.length === 0) {
+      appendPanelMessage("Hi! Ask me anything, or tap Task Summary / Suggest Tasks below.", "ai");
+    }
+  });
+
+  document.getElementById("collapseAssistantBtn").addEventListener("click", () => {
+    backdrop.classList.remove("open");
+  });
+
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) backdrop.classList.remove("open");
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+
+    appendPanelMessage(text, "user");
+    input.value = "";
+    const thinking = appendPanelMessage("Thinking…", "ai");
+
+    try {
+      const reply = await window.pywebview.api.ai_command(text);
+      thinking.querySelector("p").textContent = reply || "Done.";
+      loadTasks();
+    } catch (err) {
+      thinking.querySelector("p").textContent = "Something went wrong reaching the AI.";
+      console.error(err);
+    }
+  });
+
+  document.getElementById("summaryBtn").addEventListener("click", async () => {
+    const thinking = appendPanelMessage("Summarizing your tasks…", "ai");
+    try {
+      const summary = await window.pywebview.api.get_summary();
+      thinking.querySelector("p").textContent = summary;
+    } catch (err) {
+      thinking.querySelector("p").textContent = "Couldn't generate a summary.";
+      console.error(err);
+    }
+  });
+
+  document.getElementById("suggestBtn").addEventListener("click", async () => {
+    const thinking = appendPanelMessage("Thinking of a few suggestions…", "ai");
+    try {
+      const suggestions = await window.pywebview.api.get_suggestions();
+      thinking.querySelector("p").textContent = suggestions;
+    } catch (err) {
+      thinking.querySelector("p").textContent = "Couldn't generate suggestions.";
+      console.error(err);
+    }
+  });
+}
+
+function appendPanelMessage(text, who) {
+  const chatLog = document.getElementById("chatLogExpanded");
+  const msg = document.createElement("div");
+  msg.className = `assistant-msg ${who}`;
+  msg.innerHTML = who === "ai"
+    ? `<div class="ai-dot"></div><p>${escapeHtml(text)}</p>`
+    : `<p>${escapeHtml(text)}</p>`;
+  chatLog.appendChild(msg);
+  chatLog.scrollTop = chatLog.scrollHeight;
+  return msg;
 }

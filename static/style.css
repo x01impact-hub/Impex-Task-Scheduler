@@ -472,3 +472,9 @@ body::before{
   height: 16px;
   accent-color: var(--sage);
 }
+
+.modal select option{
+  background: #10160F;
+  color: var(--mist-100);
+  padding: 8px;
+}
