@@ -167,3 +167,9 @@ def handle_ai_command(text):
 
 def _today_str():
     return datetime.now().strftime("%Y-%m-%d")
+
+def get_summary(self):
+    return ai.summarize_tasks()
+
+def get_suggestions(self):
+    return ai.suggest_tasks
