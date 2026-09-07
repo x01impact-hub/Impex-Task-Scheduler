@@ -25,4 +25,4 @@ if __name__ == "__main__":
         height=800,
         min_size=(960, 640),
     )
-    webview.start(debug=True)
+    webview.start(debug=False)

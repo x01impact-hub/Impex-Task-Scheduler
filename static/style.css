@@ -478,3 +478,76 @@ body::before{
   color: var(--mist-100);
   padding: 8px;
 }
+
+.assistant-head-actions{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.assistant-panel-backdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  z-index: 60;
+}
+.assistant-panel-backdrop.open{ display:block; }
+
+.assistant-panel{
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 50%;
+  min-width: 420px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  border-left: 1px solid var(--glass-border);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slideIn 0.2s ease;
+}
+@keyframes slideIn{
+  from{ transform: translateX(24px); opacity: 0; }
+  to{ transform: translateX(0); opacity: 1; }
+}
+
+.assistant-panel-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.assistant-panel-actions{
+  display:flex;
+  gap: 10px;
+}
+.pill-btn{
+  background: rgba(159,191,160,0.15);
+  border: 1px solid rgba(159,191,160,0.3);
+  color: var(--sage-strong);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pill-btn:hover{ background: rgba(159,191,160,0.25); }
+
+.chat-log-expanded{
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-right: 4px;
+}
+.chat-log-expanded .assistant-msg.user p{
+  margin-left: auto;
+  color: var(--mist-45);
+  text-align: right;
+}

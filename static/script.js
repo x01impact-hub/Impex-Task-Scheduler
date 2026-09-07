@@ -42,8 +42,8 @@ document.addEventListener("DOMContentLoaded", () => {
 // ---------- Loading & rendering tasks ----------
 async function loadTasks() {
   try {
-    if(isSearching){
-      allTasks = await window.pywebview.api.search_tasks(searchQuery);  
+    if (isSearching) {
+      allTasks = await window.pywebview.api.search_tasks(searchQuery);
     } else {
       allTasks = await window.pywebview.api.get_tasks(currentFilter);
     }
@@ -58,7 +58,9 @@ async function loadTasks() {
 
 function renderTaskList() {
   taskListEl.innerHTML = "";
-  focusTitleEl.textContent = isSearching ? `Search: "${searchQuery}"` : (FILTER_TITLES[currentFilter] || "Tasks");
+  focusTitleEl.textContent = isSearching
+    ? `Search: "${searchQuery}"`
+    : (FILTER_TITLES[currentFilter] || "Tasks");
   taskCountEl.textContent = `${allTasks.length} task${allTasks.length === 1 ? "" : "s"}`;
 
   if (allTasks.length === 0) {
@@ -164,16 +166,19 @@ function setupNav() {
       item.classList.add("active");
       currentFilter = item.dataset.filter;
       isSearching = false;
-      searchQuery= "";
-      document.getElementById("searchInput").value = "";
+      searchQuery = "";
+      const searchInput = document.getElementById("searchInput");
+      if (searchInput) searchInput.value = "";
       loadTasks();
     });
   });
 }
 
+// ---------- Search ----------
 function setupSearch() {
   const searchInput = document.getElementById("searchInput");
   const searchBtn = document.getElementById("searchBtn");
+  if (!searchInput || !searchBtn) return;
 
   function runSearch() {
     const text = searchInput.value.trim();
@@ -278,10 +283,11 @@ function openEditModal(taskId) {
   document.getElementById("fieldPriority").value = task.priority || "medium";
   document.getElementById("fieldRecurrence").value = task.recurrence || "none";
   document.getElementById("fieldReminder").checked = (task.remind_before || 0) > 0;
+
   document.getElementById("modalBackdrop").classList.add("open");
 }
 
-// ---------- AI Assistant ----------
+// ---------- Compact AI chat (main card) ----------
 function setupAssistant() {
   const send = document.getElementById("assistantSend");
   const input = document.getElementById("assistantInput");
@@ -302,7 +308,7 @@ function setupAssistant() {
     try {
       const reply = await window.pywebview.api.ai_command(text);
       messageEl.textContent = reply || "Done.";
-      loadTasks(); // in case the command changed something
+      loadTasks();
     } catch (err) {
       messageEl.textContent = "Something went wrong reaching the AI.";
       console.error(err);
@@ -310,11 +316,15 @@ function setupAssistant() {
   }
 }
 
+// ---------- Statistics modal ----------
 function setupStats() {
   const backdrop = document.getElementById("statsBackdrop");
   const grid = document.getElementById("statsGrid");
+  const viewBtn = document.getElementById("viewStatsBtn");
+  const closeBtn = document.getElementById("closeStats");
+  if (!backdrop || !grid || !viewBtn || !closeBtn) return;
 
-  document.getElementById("viewStatsBtn").addEventListener("click", async () => {
+  viewBtn.addEventListener("click", async () => {
     try {
       const s = await window.pywebview.api.get_stats();
 
@@ -349,7 +359,7 @@ function setupStats() {
     }
   });
 
-  document.getElementById("closeStats").addEventListener("click", () => {
+  closeBtn.addEventListener("click", () => {
     backdrop.classList.remove("open");
   });
 
@@ -358,20 +368,35 @@ function setupStats() {
   });
 }
 
+// ---------- Expanded Assistant Panel ----------
 function setupAssistantPanel() {
+  const expandBtn = document.getElementById("expandAssistantBtn");
+  const collapseBtn = document.getElementById("collapseAssistantBtn");
   const backdrop = document.getElementById("assistantPanelBackdrop");
   const chatLog = document.getElementById("chatLogExpanded");
   const form = document.getElementById("assistantPanelForm");
   const input = document.getElementById("assistantPanelInput");
+  const summaryBtn = document.getElementById("summaryBtn");
+  const suggestBtn = document.getElementById("suggestBtn");
 
-  document.getElementById("expandAssistantBtn").addEventListener("click", () => {
+  // Bail out safely (with a console warning) instead of crashing
+  // if any expected element is missing from the HTML.
+  const required = { expandBtn, collapseBtn, backdrop, chatLog, form, input, summaryBtn, suggestBtn };
+  for (const [name, el] of Object.entries(required)) {
+    if (!el) {
+      console.warn(`setupAssistantPanel: missing element "${name}" — check index.html IDs.`);
+      return;
+    }
+  }
+
+  expandBtn.addEventListener("click", () => {
     backdrop.classList.add("open");
     if (chatLog.children.length === 0) {
       appendPanelMessage("Hi! Ask me anything, or tap Task Summary / Suggest Tasks below.", "ai");
     }
   });
 
-  document.getElementById("collapseAssistantBtn").addEventListener("click", () => {
+  collapseBtn.addEventListener("click", () => {
     backdrop.classList.remove("open");
   });
 
@@ -398,7 +423,7 @@ function setupAssistantPanel() {
     }
   });
 
-  document.getElementById("summaryBtn").addEventListener("click", async () => {
+  summaryBtn.addEventListener("click", async () => {
     const thinking = appendPanelMessage("Summarizing your tasks…", "ai");
     try {
       const summary = await window.pywebview.api.get_summary();
@@ -409,7 +434,7 @@ function setupAssistantPanel() {
     }
   });
 
-  document.getElementById("suggestBtn").addEventListener("click", async () => {
+  suggestBtn.addEventListener("click", async () => {
     const thinking = appendPanelMessage("Thinking of a few suggestions…", "ai");
     try {
       const suggestions = await window.pywebview.api.get_suggestions();
