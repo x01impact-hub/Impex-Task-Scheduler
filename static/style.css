@@ -61,6 +61,12 @@ body::before{
   margin-bottom: 8px;
 }
 
+.brand-left{
+  display:flex;
+  align-items:baseline;
+  gap: 10px;
+}
+
 .brand-name{
   font-family: 'Fraunces', serif;
   font-size: 26px;
@@ -72,6 +78,15 @@ body::before{
   font-size: 13px;
   color: var(--mist-70);
   font-weight: 500;
+}
+
+#refreshBtn{
+  font-size: 18px;
+  color: var(--sage);
+  transition: transform 0.4s ease;
+}
+#refreshBtn.spinning{
+  transform: rotate(360deg);
 }
 
 .panel{

@@ -36,8 +36,20 @@ document.addEventListener("DOMContentLoaded", () => {
     setupSearch();
     setupStats();
     setupAssistantPanel();
+    setupRefresh();
   });
 });
+
+function setupRefresh() {
+  const btn = document.getElementById("refreshBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    btn.classList.add("spinning");
+    loadTasks();
+    setTimeout(() => btn.classList.remove("spinning"), 400);
+  });
+}
 
 // ---------- Loading & rendering tasks ----------
 async function loadTasks() {
