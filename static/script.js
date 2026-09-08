@@ -379,8 +379,6 @@ function setupAssistantPanel() {
   const summaryBtn = document.getElementById("summaryBtn");
   const suggestBtn = document.getElementById("suggestBtn");
 
-  // Bail out safely (with a console warning) instead of crashing
-  // if any expected element is missing from the HTML.
   const required = { expandBtn, collapseBtn, backdrop, chatLog, form, input, summaryBtn, suggestBtn };
   for (const [name, el] of Object.entries(required)) {
     if (!el) {
@@ -457,3 +455,9 @@ function appendPanelMessage(text, who) {
   chatLog.scrollTop = chatLog.scrollHeight;
   return msg;
 }
+
+// Auto-refresh every 60 seconds to pick up changes made by the
+// background scheduler (expired tasks, recurring task resets, etc.)
+setInterval(() => {
+  loadTasks();
+}, 60000);

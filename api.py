@@ -103,6 +103,7 @@ def handle_ai_command(text):
         **Assistant.parse_priority(text),
         **Assistant.parse_people(text),
         **Assistant.parse_location(text),
+        **Assistant.parse_relatives(text),
     }
     prompt = Assistant.build_prompt(parsed)
     response = ai.chat(prompt)
