@@ -1,7 +1,5 @@
 import threading
-
 import webview
-
 import database
 import scheduler
 from api import Api
