@@ -10,9 +10,13 @@ class Api:
     """Exposed to the frontend as window.pywebview.api"""
 
     # ---------- Reading tasks ----------
-    def get_tasks(self, status="pending"):
+    def get_tasks(self, status="pending", list_id=None):
         status_arg = None if status in (None, "all") else status
-        rows = database.view_tasks(status_arg)
+        rows = database.view_tasks(status_arg, list_id)
+        return [self._row_to_dict(row) for row in (rows or [])]
+
+    def search_tasks(self, query, list_id=None):
+        rows = database.search_tasks(query, list_id)
         return [self._row_to_dict(row) for row in (rows or [])]
 
     def get_upcoming(self, limit=5):
@@ -22,13 +26,10 @@ class Api:
 
     def get_stats(self):
         return database.get_task_statistics()
-    
-    def search_tasks(self, query):
-        rows = database.search_tasks(query) or []
-        return [self._row_to_dict(row) for row in rows]
-    
+
     # ---------- Mutating tasks ----------
     def add_task(self, payload):
+        list_id = self._parse_list_id(payload.get("list_id"))
         return database.add_task(
             title=payload.get("title") or "Untitled task",
             description=payload.get("description") or "",
@@ -37,9 +38,16 @@ class Api:
             priority=payload.get("priority") or "medium",
             recurrence=payload.get("recurrence") or "none",
             remind_before=int(payload.get("remind_before") or 0),
+            list_id=list_id,
         )
 
     def update_task(self, task_id, payload):
+        # 0 means "explicitly unassign from any list" — always pass a real
+        # value (never None) so database.update_task always applies it.
+        list_id = self._parse_list_id(payload.get("list_id"))
+        if list_id is None:
+            list_id = 0
+
         database.update_task(
             task_id=task_id,
             title=payload.get("title") or "",
@@ -49,7 +57,7 @@ class Api:
             priority=payload.get("priority") or "",
             recurrence=payload.get("recurrence") or "",
             remind_before=int(payload.get("remind_before", 0)),
-
+            list_id=list_id,
         )
         return True
 
@@ -70,14 +78,44 @@ class Api:
             database.mark_as_completed(task_id)
         return True
 
+    # ---------- Lists ----------
+    def get_lists(self):
+        rows = database.get_lists() or []
+        return [{"id": r[0], "name": r[1], "count": r[2]} for r in rows]
+
+    def create_list(self, name):
+        new_id = database.create_list(name)
+        return new_id
+
+    def rename_list(self, list_id, name):
+        return database.rename_list(list_id, name)
+
+    def delete_list(self, list_id):
+        return database.delete_list(list_id)
+
     # ---------- AI chat ----------
     def ai_command(self, text):
         return handle_ai_command(text)
 
+    def get_summary(self):
+        return ai.summarize_tasks()
+
+    def get_suggestions(self):
+        return ai.suggest_tasks()
+
     # ---------- helpers ----------
+    def _parse_list_id(self, raw):
+        if raw in (None, "", "0", 0):
+            return None
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return None
+
     def _row_to_dict(self, row):
         # table order: id, title, description, due_date, due_time,
-        # priority, status, recurrence, remind_before, reminder_sent, completed_at, created_at
+        # priority, status, recurrence, remind_before, reminder_sent,
+        # completed_at, created_at, list_id
         return {
             "id": row[0],
             "title": row[1],
@@ -88,22 +126,18 @@ class Api:
             "status": row[6],
             "recurrence": row[7] or "none",
             "remind_before": row[8] or 0,
+            "list_id": row[12] if len(row) > 12 else None,
         }
 
 
 def handle_ai_command(text):
-    """
-    Mirrors Assistant.process_command's logic, but returns a message
-    string instead of printing, and never calls input() (which would
-    freeze a windowed app with no console attached).
-    """
     parsed = {
         **Assistant.parse_date(text),
         **Assistant.parse_time(text),
         **Assistant.parse_priority(text),
         **Assistant.parse_people(text),
         **Assistant.parse_location(text),
-        **Assistant.parse_relatives(text),
+        **Assistant.parse_relative(text),
     }
     prompt = Assistant.build_prompt(parsed)
     response = ai.chat(prompt)
@@ -168,9 +202,3 @@ def handle_ai_command(text):
 
 def _today_str():
     return datetime.now().strftime("%Y-%m-%d")
-
-def get_summary(self):
-    return ai.summarize_tasks()
-
-def get_suggestions(self):
-    return ai.suggest_tasks

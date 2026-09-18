@@ -32,7 +32,7 @@ def parse_date(user_input):
     elif "tomorrow" in text:
         tomorrow = datetime.now() + timedelta(days=1)
         parsed_data["date"] = tomorrow.strftime("%Y-%m-%d")
-    
+
     if "next" in text:
         for day_name, day_number in weekdays.items():
             if day_name in text:
@@ -80,7 +80,7 @@ def parse_time(user_input):
             hour = 0
         parsed_data["time"] = f"{hour:02}:{minute}"
         return parsed_data
-    
+
     ## For 24-hour format ##
     match = re.search(r'\b([01]?\d|2[0-3]):([0-5]\d)\b', text)
     if match:
@@ -90,11 +90,15 @@ def parse_time(user_input):
         return parsed_data
     return parsed_data
 
-def parse_relatives(user_input):
+
+## RELATIVE TIME PARSER (e.g. "in 5 minutes", "in 2 hours") ##
+def parse_relative(user_input):
     parsed_data = {
         "date": None,
-        "time":None,}
+        "time": None
+    }
     text = user_input.lower()
+
     match = re.search(r'in\s+(\d+)\s*(minute|minutes|min|mins|hour|hours|hr|hrs)', text)
     if match:
         amount = int(match.group(1))
@@ -109,6 +113,8 @@ def parse_relatives(user_input):
         parsed_data["time"] = target.strftime("%H:%M")
 
     return parsed_data
+
+
 ## PRIORITY PARSER ##
 
 def parse_priority(user_input):
@@ -189,23 +195,13 @@ def process_command(user_input):
     **parse_time(user_input),
     **parse_priority(user_input),
     **parse_people(user_input),
-    **parse_location(user_input)
-    **parse_relatives(user_input),
-}# ALL THE PRINT IS COMMENTED SO IT SHOWS ONLY THE RESPONSE AND NOT THE DEBUG INFORMATION #
-    # remove comment to ch3eck if its working  or not  #
-
-    #print("\nParsed Data ")
-    #print(parsed)
+    **parse_location(user_input),
+    **parse_relative(user_input),
+}
 
     prompt = build_prompt(parsed)
 
-    #print("\nPrompt Sent To AI")
-    #print(prompt)
-
     response = ai.chat(prompt)
-
-    #print("\nRaw AI Response")
-    #print(response)
 
     try:
         data = json.loads(response)

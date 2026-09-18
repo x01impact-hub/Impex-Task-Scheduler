@@ -1,5 +1,7 @@
 let allTasks = [];
+let allLists = [];
 let currentFilter = "all";
+let currentListId = null;
 let editingTaskId = null;
 let isSearching = false;
 let searchQuery = "";
@@ -11,6 +13,7 @@ const progressPctEl = document.getElementById("progressPct");
 const progressCaptionEl = document.getElementById("progressCaption");
 const progressRingEl = document.getElementById("progressRing");
 const upcomingListEl = document.getElementById("upcomingList");
+const listsGroupEl = document.getElementById("listsGroup");
 
 const FILTER_TITLES = {
   all: "All Tasks",
@@ -29,6 +32,7 @@ function whenApiReady(callback) {
 
 document.addEventListener("DOMContentLoaded", () => {
   whenApiReady(() => {
+    loadLists();
     loadTasks();
     setupNav();
     setupModal();
@@ -37,25 +41,17 @@ document.addEventListener("DOMContentLoaded", () => {
     setupStats();
     setupAssistantPanel();
     setupRefresh();
+    setupListModal();
   });
 });
-
-function setupRefresh() {
-  const btn = document.getElementById("refreshBtn");
-  if (!btn) return;
-
-  btn.addEventListener("click", () => {
-    btn.classList.add("spinning");
-    loadTasks();
-    setTimeout(() => btn.classList.remove("spinning"), 400);
-  });
-}
 
 // ---------- Loading & rendering tasks ----------
 async function loadTasks() {
   try {
     if (isSearching) {
       allTasks = await window.pywebview.api.search_tasks(searchQuery);
+    } else if (currentListId !== null) {
+      allTasks = await window.pywebview.api.get_tasks("all", currentListId);
     } else {
       allTasks = await window.pywebview.api.get_tasks(currentFilter);
     }
@@ -70,9 +66,16 @@ async function loadTasks() {
 
 function renderTaskList() {
   taskListEl.innerHTML = "";
-  focusTitleEl.textContent = isSearching
-    ? `Search: "${searchQuery}"`
-    : (FILTER_TITLES[currentFilter] || "Tasks");
+
+  if (isSearching) {
+    focusTitleEl.textContent = `Search: "${searchQuery}"`;
+  } else if (currentListId !== null) {
+    const list = allLists.find((l) => String(l.id) === String(currentListId));
+    focusTitleEl.textContent = list ? list.name : "List";
+  } else {
+    focusTitleEl.textContent = FILTER_TITLES[currentFilter] || "Tasks";
+  }
+
   taskCountEl.textContent = `${allTasks.length} task${allTasks.length === 1 ? "" : "s"}`;
 
   if (allTasks.length === 0) {
@@ -170,19 +173,142 @@ async function renderUpcoming() {
   }
 }
 
-// ---------- Nav / filters ----------
+// ---------- Nav / status filters ----------
 function setupNav() {
   document.querySelectorAll(".nav-item[data-filter]").forEach((item) => {
     item.addEventListener("click", () => {
       document.querySelectorAll(".nav-item[data-filter]").forEach((el) => el.classList.remove("active"));
       item.classList.add("active");
       currentFilter = item.dataset.filter;
+      currentListId = null;
       isSearching = false;
       searchQuery = "";
       const searchInput = document.getElementById("searchInput");
       if (searchInput) searchInput.value = "";
+      document.querySelectorAll(".list-item").forEach((el) => el.classList.remove("active"));
       loadTasks();
     });
+  });
+}
+
+// ---------- Lists ----------
+async function loadLists() {
+  try {
+    allLists = await window.pywebview.api.get_lists();
+  } catch (e) {
+    console.error("Failed to load lists", e);
+    allLists = [];
+  }
+  renderLists();
+  renderListOptions();
+}
+
+function renderLists() {
+  listsGroupEl.innerHTML = "";
+
+  if (allLists.length === 0) {
+    listsGroupEl.innerHTML = `<p class="empty-hint">No lists yet.</p>`;
+    return;
+  }
+
+  allLists.forEach((list) => {
+    const item = document.createElement("div");
+    item.className = "list-item" + (String(currentListId) === String(list.id) ? " active" : "");
+    item.dataset.listId = list.id;
+
+    item.innerHTML = `
+      <span class="list-item-name">${escapeHtml(list.name)}</span>
+      <span class="list-item-right">
+        <span class="list-item-count">${list.count}</span>
+        <button class="list-delete-btn" title="Delete list">✕</button>
+      </span>
+    `;
+
+    item.querySelector(".list-item-name").addEventListener("click", () => selectList(list.id));
+    item.querySelector(".list-item-count").addEventListener("click", () => selectList(list.id));
+    item.querySelector(".list-delete-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      deleteList(list.id, list.name);
+    });
+
+    listsGroupEl.appendChild(item);
+  });
+}
+
+function renderListOptions() {
+  const select = document.getElementById("fieldList");
+  if (!select) return;
+
+  // Keep the first "No list" option, replace everything after it
+  select.innerHTML = `<option value="0">No list</option>`;
+  allLists.forEach((list) => {
+    const opt = document.createElement("option");
+    opt.value = list.id;
+    opt.textContent = list.name;
+    select.appendChild(opt);
+  });
+}
+
+function selectList(listId) {
+  currentListId = listId;
+  isSearching = false;
+  searchQuery = "";
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) searchInput.value = "";
+  document.querySelectorAll(".nav-item[data-filter]").forEach((el) => el.classList.remove("active"));
+  renderLists();
+  loadTasks();
+}
+
+async function deleteList(listId, listName) {
+  if (!confirm(`Delete "${listName}"? Tasks in it will not be deleted, just unassigned.`)) return;
+  try {
+    await window.pywebview.api.delete_list(listId);
+    if (String(currentListId) === String(listId)) {
+      currentListId = null;
+      currentFilter = "all";
+      document.querySelector('.nav-item[data-filter="all"]').classList.add("active");
+    }
+    await loadLists();
+    loadTasks();
+  } catch (e) {
+    console.error("Failed to delete list", e);
+  }
+}
+
+function setupListModal() {
+  const backdrop = document.getElementById("listModalBackdrop");
+  const form = document.getElementById("listForm");
+  const newListBtn = document.getElementById("newListBtn");
+  const cancelBtn = document.getElementById("cancelListModal");
+
+  newListBtn.addEventListener("click", () => {
+    document.getElementById("listModalTitle").textContent = "New list";
+    document.getElementById("listFieldId").value = "";
+    document.getElementById("listFieldName").value = "";
+    backdrop.classList.add("open");
+  });
+
+  cancelBtn.addEventListener("click", () => {
+    backdrop.classList.remove("open");
+  });
+
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) backdrop.classList.remove("open");
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("listFieldName").value.trim();
+    if (!name) return;
+
+    try {
+      await window.pywebview.api.create_list(name);
+      backdrop.classList.remove("open");
+      await loadLists();
+    } catch (err) {
+      console.error("Failed to create list", err);
+    }
   });
 }
 
@@ -202,7 +328,9 @@ function setupSearch() {
     }
     isSearching = true;
     searchQuery = text;
+    currentListId = null;
     document.querySelectorAll(".nav-item[data-filter]").forEach((el) => el.classList.remove("active"));
+    document.querySelectorAll(".list-item").forEach((el) => el.classList.remove("active"));
     loadTasks();
   }
 
@@ -227,6 +355,7 @@ async function deleteTask(taskId) {
   try {
     await window.pywebview.api.delete_task(taskId);
     loadTasks();
+    loadLists(); // list counts may have changed
   } catch (e) {
     console.error("Failed to delete task", e);
   }
@@ -243,6 +372,7 @@ function setupModal() {
     modalTitle.textContent = "Add task";
     form.reset();
     document.getElementById("fieldId").value = "";
+    document.getElementById("fieldList").value = currentListId !== null ? String(currentListId) : "0";
     backdrop.classList.add("open");
   });
 
@@ -265,6 +395,7 @@ function setupModal() {
       priority: document.getElementById("fieldPriority").value,
       recurrence: document.getElementById("fieldRecurrence").value,
       remind_before: document.getElementById("fieldReminder").checked ? 15 : 0,
+      list_id: document.getElementById("fieldList").value,
     };
 
     try {
@@ -275,6 +406,7 @@ function setupModal() {
       }
       backdrop.classList.remove("open");
       loadTasks();
+      loadLists(); // list counts may have changed
     } catch (err) {
       console.error("Failed to save task", err);
     }
@@ -295,6 +427,7 @@ function openEditModal(taskId) {
   document.getElementById("fieldPriority").value = task.priority || "medium";
   document.getElementById("fieldRecurrence").value = task.recurrence || "none";
   document.getElementById("fieldReminder").checked = (task.remind_before || 0) > 0;
+  document.getElementById("fieldList").value = task.list_id ? String(task.list_id) : "0";
 
   document.getElementById("modalBackdrop").classList.add("open");
 }
@@ -466,6 +599,19 @@ function appendPanelMessage(text, who) {
   chatLog.appendChild(msg);
   chatLog.scrollTop = chatLog.scrollHeight;
   return msg;
+}
+
+// ---------- Refresh button ----------
+function setupRefresh() {
+  const btn = document.getElementById("refreshBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    btn.classList.add("spinning");
+    loadLists();
+    loadTasks();
+    setTimeout(() => btn.classList.remove("spinning"), 400);
+  });
 }
 
 // Auto-refresh every 60 seconds to pick up changes made by the
